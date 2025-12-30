@@ -1,0 +1,69 @@
+<script setup lang="ts">
+	import { computed } from 'vue'
+	import { useRoute, useRouter } from 'vue-router'
+
+	import { Icon } from '@iconify/vue'
+
+	import { t } from '../i18n'
+	import { useUiStore } from '../stores/uiStore'
+
+	const router = useRouter()
+	const route = useRoute()
+	const ui = useUiStore()
+
+	const canGoBack = computed(() => route.path !== '/')
+
+	function goBack(): void {
+		if (window.history.length > 1) {
+			router.back()
+			return
+		}
+		router.push({ name: 'home' })
+	}
+
+	const btnSquare = computed(
+		() => 'btn btn-ghost btn-square h-10 w-10 border border-base-content shadow-none'
+	)
+</script>
+
+<template>
+	<header class="navbar w-full border-b border-base-content bg-base-100 text-base-content">
+		<div class="mx-auto flex h-14 w-full max-w-5xl items-center gap-3 px-4">
+			<div class="flex items-center gap-2">
+				<button
+					v-if="canGoBack"
+					type="button"
+					:class="btnSquare"
+					@click="goBack"
+					aria-label="Back"
+				>
+					<Icon icon="tabler:chevron-left" class="h-4 w-4" />
+				</button>
+
+				<div class="flex items-center gap-2">
+					<div class="font-mono text-sm font-extrabold tracking-tight">
+						{{ t(ui.lang.value, 'appTitle') }}
+					</div>
+				</div>
+			</div>
+
+			<div class="flex-1" />
+
+			<div class="flex items-center gap-2">
+				<select
+					v-model="ui.lang.value"
+					class="select select-ghost h-10 border border-base-content font-mono text-sm font-bold shadow-none"
+					aria-label="Language"
+				>
+					<option value="zh">中文</option>
+					<option value="en">English</option>
+				</select>
+
+				<button type="button" :class="btnSquare" @click="ui.toggleTheme" aria-label="Theme">
+					<Icon v-if="ui.isDark.value" icon="tabler:sun" class="h-4 w-4" />
+					<Icon v-else icon="tabler:moon" class="h-4 w-4" />
+				</button>
+			</div>
+		</div>
+	</header>
+</template>

@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes: all;
+}
+
+/* Minimal app-level defaults (keep layout stable across pages) */
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  min-width: 320px;
+}
+
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+
+  
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(97% 0 0);
+  --color-base-300: oklch(93% 0 0);
+  --color-base-content: oklch(0% 0 0);
+
+  --color-primary: oklch(0% 0 0);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(0% 0 0);
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: oklch(0% 0 0);
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: oklch(20% 0 0);
+  --color-neutral-content: oklch(100% 0 0);
+
+  --color-info: oklch(0% 0 0);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(0% 0 0);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(0% 0 0);
+  --color-warning-content: oklch(100% 0 0);
+  --color-error: oklch(0% 0 0);
+  --color-error-content: oklch(100% 0 0);
+
+  --radius-selector: 0rem;
+  --radius-field: 0.1rem;
+  --radius-box: 0rem;
+
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --sudoku-related: #E7E7E7;
+  --sudoku-selected: #D1D1D1;
+}
+
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+
+  --color-base-100: oklch(0% 0 0);
+  --color-base-200: oklch(14% 0 0);
+  --color-base-300: oklch(20% 0 0);
+  --color-base-content: oklch(100% 0 0);
+
+  --color-primary: oklch(100% 0 0);
+  --color-primary-content: oklch(0% 0 0);
+  --color-secondary: oklch(100% 0 0);
+  --color-secondary-content: oklch(0% 0 0);
+  --color-accent: oklch(100% 0 0);
+  --color-accent-content: oklch(0% 0 0);
+  --color-neutral: oklch(80% 0 0);
+  --color-neutral-content: oklch(0% 0 0);
+
+  --color-info: oklch(100% 0 0);
+  --color-info-content: oklch(0% 0 0);
+  --color-success: oklch(100% 0 0);
+  --color-success-content: oklch(0% 0 0);
+  --color-warning: oklch(100% 0 0);
+  --color-warning-content: oklch(0% 0 0);
+  --color-error: oklch(100% 0 0);
+  --color-error-content: oklch(0% 0 0);
+
+  --radius-selector: 0rem;
+  --radius-field: 0.1rem;
+  --radius-box: 0rem;
+
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --sudoku-related: #1A1A1A;
+  --sudoku-selected: #2A2A2A;
+}
