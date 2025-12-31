@@ -7,7 +7,9 @@ import { t } from '../i18n'
 import { useUiStore } from '../stores/uiStore'
 
 import type { Board, Difficulty, Digit } from '../sudoku'
-import { findConflicts, generatePuzzle, isSolved, setCell } from '../sudoku'
+import { cloneBoard, findConflicts, generatePuzzle, isSolved, setCell } from '../sudoku'
+
+import { Icon } from '@iconify/vue'
 
 type SaveState = {
   version: 1
@@ -55,6 +57,8 @@ const errorsCount = ref(0)
 const maxErrors = ref(3)
 const selectedDigit = ref<Exclude<Digit, 0> | null>(null)
 const lastSavedAt = ref<number | null>(null)
+
+const history = ref<Board[]>([])
 
 let timerId: number | null = null
 let saveDebounceId: number | null = null
@@ -152,6 +156,7 @@ function newGame(nextDifficulty: Difficulty): void {
   elapsedSeconds.value = 0
   hintsUsed.value = 0
   errorsCount.value = 0
+  history.value = []
   lastSavedAt.value = null
   startTimer()
   persistSaveSoon()
@@ -186,6 +191,8 @@ function inputDigit(value: number): void {
   const prev = board.value[row]![col]!
   if (prev === value) return
 
+  history.value.push(cloneBoard(board.value))
+
   board.value = setCell(board.value, row, col, value)
   const correct = solution.value?.[row]?.[col]
   if (typeof correct === 'number' && value !== 0 && value !== correct) {
@@ -208,11 +215,27 @@ function hint(): void {
   const { row, col } = selected.value
   if (given.value[row]![col]!) return
   const correct = solution.value[row]![col]!
+
+  history.value.push(cloneBoard(board.value))
+
   board.value = setCell(board.value, row, col, correct)
   selectedDigit.value = correct as Exclude<Digit, 0>
   hintsUsed.value += 1
   persistSaveSoon()
   checkCompletion()
+}
+
+function undo(): void {
+  if (isLocked.value) return
+  if (!board.value) return
+  if (history.value.length === 0) return
+  board.value = history.value.pop() ?? board.value
+  persistSaveSoon()
+
+  if (selected.value) {
+    const v = board.value[selected.value.row]?.[selected.value.col] ?? 0
+    if (v !== 0) selectedDigit.value = v as Exclude<Digit, 0>
+  }
 }
 
 function checkCompletion(): void {
@@ -304,6 +327,7 @@ function continueSavedGame(): void {
   if (typeof saved.maxErrors === 'number') maxErrors.value = saved.maxErrors
   lastSavedAt.value = Date.now()
   selected.value = null
+  history.value = []
   if (!isLocked.value) startTimer()
 }
 
@@ -364,17 +388,17 @@ onBeforeUnmount(() => {
       <div class="w-full max-w-xl">
         <div class="mx-auto flex flex-wrap items-center justify-center gap-2 text-xs font-bold">
           <span class="border border-base-content px-3 py-1">
-            {{ t(ui.lang.value, 'timer') }}: <span class="font-mono tabular-nums">{{ timeText }}</span>
+            {{ t(ui.lang, 'timer') }}: <span class="font-mono tabular-nums">{{ timeText }}</span>
           </span>
           <span class="border border-base-content px-3 py-1">
-            {{ t(ui.lang.value, 'hintsUsed') }}: <span class="font-mono tabular-nums">{{ hintsUsed }}</span>
+            {{ t(ui.lang, 'hintsUsed') }}: <span class="font-mono tabular-nums">{{ hintsUsed }}</span>
           </span>
           <span class="border border-base-content px-3 py-1">
-            {{ t(ui.lang.value, 'mistakes') }}:
+            {{ t(ui.lang, 'mistakes') }}:
             <span class="font-mono tabular-nums">{{ errorsCount }}/{{ maxErrors }}</span>
           </span>
           <span class="border border-base-content px-3 py-1">
-            {{ t(ui.lang.value, 'difficulty') }}: <span class="font-mono">{{ difficulty }}</span>
+            {{ t(ui.lang, 'difficulty') }}: <span class="font-mono">{{ difficulty }}</span>
           </span>
           <span v-if="savedText" class="border border-base-content px-3 py-1">
             {{ savedText }}
@@ -431,14 +455,25 @@ onBeforeUnmount(() => {
             </button>
           </div>
 
-          <div class="mt-3 grid w-full grid-cols-2 gap-2">
+          <div class="mt-3 grid w-full grid-cols-3 gap-2">
+            <button
+              type="button"
+              class="btn btn-ghost h-12 border border-base-content px-4 text-sm font-extrabold shadow-none"
+              @click="undo"
+              :disabled="isLocked || history.length === 0"
+            >
+              <Icon icon="tabler:arrow-back-up" class="h-4 w-4" />
+              {{ t(ui.lang, 'undo') }}
+            </button>
+
             <button
               type="button"
               class="btn btn-ghost h-12 border border-base-content px-4 text-sm font-extrabold shadow-none"
               @click="hint"
               :disabled="!selected || isLocked"
             >
-              {{ t(ui.lang.value, 'hint') }}
+              <Icon icon="tabler:bulb" class="h-4 w-4" />
+              {{ t(ui.lang, 'hint') }}
             </button>
 
             <button
@@ -447,7 +482,8 @@ onBeforeUnmount(() => {
               @click="clearCell"
               :disabled="!selected || isLocked"
             >
-              {{ t(ui.lang.value, 'clear') }}
+              <Icon icon="tabler:eraser" class="h-4 w-4" />
+              {{ t(ui.lang, 'clear') }}
             </button>
           </div>
         </div>

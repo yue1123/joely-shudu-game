@@ -42,7 +42,7 @@
 
 				<div class="flex items-center gap-2">
 					<div class="font-mono text-sm font-extrabold tracking-tight">
-						{{ t(ui.lang.value, 'appTitle') }}
+						{{ t(ui.lang, 'appTitle') }}
 					</div>
 				</div>
 			</div>
@@ -51,7 +51,7 @@
 
 			<div class="flex items-center gap-2">
 				<select
-					v-model="ui.lang.value"
+					v-model="ui.lang"
 					class="select select-ghost h-10 border border-base-content font-mono text-sm font-bold shadow-none"
 					aria-label="Language"
 				>
@@ -60,7 +60,7 @@
 				</select>
 
 				<button type="button" :class="btnSquare" @click="ui.toggleTheme" aria-label="Theme">
-					<Icon v-if="ui.isDark.value" icon="tabler:sun" class="h-4 w-4" />
+					<Icon v-if="ui.isDark" icon="tabler:sun" class="h-4 w-4" />
 					<Icon v-else icon="tabler:moon" class="h-4 w-4" />
 				</button>
 			</div>

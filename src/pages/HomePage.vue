@@ -51,31 +51,31 @@ function openTutorial(): void {
       <div class="w-full max-w-md">
         <div v-if="!isNewFlow" class="grid gap-3">
           <button v-if="showContinue" type="button" :class="primaryBtn" @click="continueGame">
-            {{ t(ui.lang.value, 'continueGame') }}
+            {{ t(ui.lang, 'continueGame') }}
           </button>
 
           <button type="button" :class="primaryBtn" @click="goToNewFlow">
-            {{ t(ui.lang.value, 'newGame') }}
+            {{ t(ui.lang, 'newGame') }}
           </button>
 
           <button type="button" :class="primaryBtn" @click="openLeaderboard">
-            {{ t(ui.lang.value, 'leaderboard') }}
+            {{ t(ui.lang, 'leaderboard') }}
           </button>
 
           <button type="button" :class="primaryBtn" @click="openTutorial">
-            {{ t(ui.lang.value, 'tutorial') }}
+            {{ t(ui.lang, 'tutorial') }}
           </button>
         </div>
 
         <div v-else class="grid gap-3">
           <button type="button" :class="primaryBtn" @click="startNewGame('easy')">
-            {{ t(ui.lang.value, 'easy') }}
+            {{ t(ui.lang, 'easy') }}
           </button>
           <button type="button" :class="primaryBtn" @click="startNewGame('medium')">
-            {{ t(ui.lang.value, 'medium') }}
+            {{ t(ui.lang, 'medium') }}
           </button>
           <button type="button" :class="primaryBtn" @click="startNewGame('hard')">
-            {{ t(ui.lang.value, 'hard') }}
+            {{ t(ui.lang, 'hard') }}
           </button>
         </div>
       </div>

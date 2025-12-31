@@ -1,4 +1,5 @@
 import type { Language } from './uiState'
+import { unref, type Ref } from 'vue'
 
 export type I18nKey =
   | 'appTitle'
@@ -24,6 +25,7 @@ export type I18nKey =
   | 'bestTimes'
   | 'noRecords'
   | 'tutorialTitle'
+  | 'undo'
   | 'clear'
 
 const DICT: Record<Language, Record<I18nKey, string>> = {
@@ -51,7 +53,8 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
     bestTimes: '最快用时',
     noRecords: '暂无记录',
     tutorialTitle: '玩法教程',
-    clear: '清除',
+    undo: '撤销',
+    clear: '擦除',
   },
   en: {
     appTitle: 'Joely Sudoku',
@@ -77,10 +80,14 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
     bestTimes: 'Best times',
     noRecords: 'No records yet',
     tutorialTitle: 'How to Play',
-    clear: 'Clear',
+    undo: 'Undo',
+    clear: 'Erase',
   },
 }
 
-export function t(lang: Language, key: I18nKey): string {
-  return DICT[lang]?.[key] ?? key
+type MaybeRef<T> = T | Ref<T>
+
+export function t(lang: MaybeRef<Language>, key: I18nKey): string {
+  const resolved = unref(lang)
+  return DICT[resolved]?.[key] ?? key
 }

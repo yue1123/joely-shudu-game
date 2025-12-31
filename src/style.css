@@ -14,6 +14,36 @@ body {
   min-width: 320px;
 }
 
+:root {
+  view-transition-name: root;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  animation: theme-wipe-in 260ms ease-out both;
+  z-index: 2;
+}
+
+@keyframes theme-wipe-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 @plugin "daisyui/theme" {
   name: "light";
   default: true;

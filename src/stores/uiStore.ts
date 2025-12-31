@@ -21,7 +21,32 @@ watch(theme, (v) => {
 const isDark = computed(() => theme.value === 'dark')
 
 function toggleTheme(): void {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  const next: Theme = theme.value === 'dark' ? 'light' : 'dark'
+
+  if (typeof document === 'undefined') {
+    theme.value = next
+    return
+  }
+
+  try {
+    const startViewTransition = (
+      document as unknown as { startViewTransition?: (cb: () => void) => unknown }
+    ).startViewTransition
+
+    if (!startViewTransition) {
+      theme.value = next
+      applyTheme(next)
+      return
+    }
+
+    startViewTransition(() => {
+      theme.value = next
+      applyTheme(next)
+    })
+  } catch {
+    theme.value = next
+    applyTheme(next)
+  }
 }
 
 export function useUiStore() {
