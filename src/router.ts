@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
-import GamePage from './pages/GamePage.vue'
-import HomePage from './pages/HomePage.vue'
-import LeaderboardPage from './pages/LeaderboardPage.vue'
-import TutorialPage from './pages/TutorialPage.vue'
+// Lazy-loaded page components for better initial bundle size
+const HomePage = () => import('./pages/HomePage.vue')
+const GamePage = () => import('./pages/GamePage.vue')
+const LeaderboardPage = () => import('./pages/LeaderboardPage.vue')
+const TutorialPage = () => import('./pages/TutorialPage.vue')
 
 export const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: HomePage },

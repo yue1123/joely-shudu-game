@@ -1,30 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
 import TopNav from '../components/TopNav.vue'
-import { t } from '../i18n'
-import { useUiStore } from '../stores/uiStore'
+import { useI18n } from '../composables'
+import { useLeaderboardStore } from '../stores'
 
-import type { Difficulty } from '../sudoku'
-
-type LeaderboardEntry = {
-  seconds: number
-  at: number
-  hintsUsed: number
-}
-
-type LeaderboardState = {
-  version: 1
-  easy: LeaderboardEntry[]
-  medium: LeaderboardEntry[]
-  hard: LeaderboardEntry[]
-}
-
-const LEADERBOARD_KEY = 'joely-shudu-game:leaderboard:v1'
-
-const ui = useUiStore()
-
-const tab = ref<Difficulty>('easy')
+const { translations } = useI18n()
+const leaderboard = useLeaderboardStore()
 
 function formatTime(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60)
@@ -32,25 +12,11 @@ function formatTime(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-function loadLeaderboard(): LeaderboardState {
-  const raw = localStorage.getItem(LEADERBOARD_KEY)
-  if (!raw) return { version: 1, easy: [], medium: [], hard: [] }
-  try {
-    const parsed = JSON.parse(raw) as LeaderboardState
-    if (parsed && parsed.version === 1) return parsed
-  } catch {
-    // ignore
-  }
-  return { version: 1, easy: [], medium: [], hard: [] }
-}
-
-const data = computed(() => loadLeaderboard())
-
-const tabs = computed(() => [
-  { value: 'easy' as const, label: t(ui.lang.value, 'easy') },
-  { value: 'medium' as const, label: t(ui.lang.value, 'medium') },
-  { value: 'hard' as const, label: t(ui.lang.value, 'hard') },
-])
+const tabs = [
+  { value: 'easy' as const, get label() { return translations.value.easy } },
+  { value: 'medium' as const, get label() { return translations.value.medium } },
+  { value: 'hard' as const, get label() { return translations.value.hard } },
+]
 </script>
 
 <template>
@@ -66,8 +32,8 @@ const tabs = computed(() => [
             type="button"
             role="tab"
             class="tab hover-3d font-mono text-sm font-bold"
-            :class="tab === x.value ? 'tab-active' : ''"
-            @click="tab = x.value"
+            :class="leaderboard.currentTab.value === x.value ? 'tab-active' : ''"
+            @click="leaderboard.setTab(x.value)"
           >
             {{ x.label }}
           </button>
@@ -75,17 +41,17 @@ const tabs = computed(() => [
       </div>
 
       <div class="mx-auto w-full max-w-md border border-base-content bg-base-100 text-base-content p-4">
-        <div class="mb-2 text-sm font-extrabold">{{ t(ui.lang.value, 'leaderboard') }} · {{ tabs.find((x) => x.value === tab)?.label }}</div>
-        <div class="text-xs font-semibold opacity-80">{{ t(ui.lang.value, 'bestTimes') }}</div>
+        <div class="mb-2 text-sm font-extrabold">{{ translations.leaderboard }} · {{ tabs.find((x) => x.value === leaderboard.currentTab.value)?.label }}</div>
+        <div class="text-xs font-semibold opacity-80">{{ translations.bestTimes }}</div>
 
-        <ol v-if="data[tab].length" class="mt-4 grid gap-2">
-          <li v-for="(e, idx) in data[tab]" :key="e.at + ':' + idx" class="flex items-center justify-between border border-base-content px-3 py-2">
+        <ol v-if="leaderboard.currentEntries.value.length" class="mt-4 grid gap-2">
+          <li v-for="(e, idx) in leaderboard.currentEntries.value" :key="e.at + ':' + idx" class="flex items-center justify-between border border-base-content px-3 py-2">
             <span class="font-mono tabular-nums">{{ String(idx + 1).padStart(2, '0') }} · {{ formatTime(e.seconds) }}</span>
-            <span class="text-xs font-semibold opacity-80">{{ t(ui.lang.value, 'hintsUsed') }}: {{ e.hintsUsed }}</span>
+            <span class="text-xs font-semibold opacity-80">{{ translations.hintsUsed }}: {{ e.hintsUsed }}</span>
           </li>
         </ol>
 
-        <div v-else class="mt-4 text-sm font-semibold opacity-80">{{ t(ui.lang.value, 'noRecords') }}</div>
+        <div v-else class="mt-4 text-sm font-semibold opacity-80">{{ translations.noRecords }}</div>
       </div>
     </main>
   </div>

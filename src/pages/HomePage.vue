@@ -3,22 +3,18 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import TopNav from '../components/TopNav.vue'
-import { t } from '../i18n'
-import { useUiStore } from '../stores/uiStore'
-
+import { useI18n } from '../composables'
+import { useGameStore } from '../stores'
 import type { Difficulty } from '../sudoku'
 
 const router = useRouter()
 const route = useRoute()
-const ui = useUiStore()
+const game = useGameStore()
+const { translations } = useI18n()
 
 const isNewFlow = computed(() => route.name === 'new')
 
-function hasSave(): boolean {
-  return Boolean(localStorage.getItem('joely-shudu-game:save:v1'))
-}
-
-const showContinue = computed(() => !isNewFlow.value && hasSave())
+const showContinue = computed(() => !isNewFlow.value && game.hasSave())
 const primaryBtn =
   'btn btn-ghost h-16 border border-base-content bg-base-100 text-base-content text-sm font-extrabold shadow-none hover:bg-base-content hover:text-base-100'
 
@@ -51,31 +47,31 @@ function openTutorial(): void {
       <div class="w-full max-w-md">
         <div v-if="!isNewFlow" class="grid gap-3">
           <button v-if="showContinue" type="button" :class="primaryBtn" @click="continueGame">
-            {{ t(ui.lang, 'continueGame') }}
+            {{ translations.continueGame }}
           </button>
 
           <button type="button" :class="primaryBtn" @click="goToNewFlow">
-            {{ t(ui.lang, 'newGame') }}
+            {{ translations.newGame }}
           </button>
 
           <button type="button" :class="primaryBtn" @click="openLeaderboard">
-            {{ t(ui.lang, 'leaderboard') }}
+            {{ translations.leaderboard }}
           </button>
 
           <button type="button" :class="primaryBtn" @click="openTutorial">
-            {{ t(ui.lang, 'tutorial') }}
+            {{ translations.tutorial }}
           </button>
         </div>
 
         <div v-else class="grid gap-3">
           <button type="button" :class="primaryBtn" @click="startNewGame('easy')">
-            {{ t(ui.lang, 'easy') }}
+            {{ translations.easy }}
           </button>
           <button type="button" :class="primaryBtn" @click="startNewGame('medium')">
-            {{ t(ui.lang, 'medium') }}
+            {{ translations.medium }}
           </button>
           <button type="button" :class="primaryBtn" @click="startNewGame('hard')">
-            {{ t(ui.lang, 'hard') }}
+            {{ translations.hard }}
           </button>
         </div>
       </div>

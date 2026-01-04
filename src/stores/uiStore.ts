@@ -1,20 +1,25 @@
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
+import type { Language, Theme } from '../types'
+import { STORAGE_KEYS } from '../composables/useStorage'
 
-import { loadLang, loadTheme, saveLang, saveTheme, type Language, type Theme } from '../uiState'
+// Reactive localStorage for language
+const lang = useLocalStorage<Language>(STORAGE_KEYS.LANG, 'zh')
 
-const lang = ref<Language>(loadLang())
-const theme = ref<Theme>(loadTheme())
+// Reactive localStorage for theme
+const theme = useLocalStorage<Theme>(STORAGE_KEYS.THEME, 'light')
 
+// Apply theme to document
 function applyTheme(next: Theme): void {
   if (typeof document === 'undefined') return
   document.documentElement.setAttribute('data-theme', next)
 }
 
+// Initialize theme on load
 applyTheme(theme.value)
 
-watch(lang, (v) => saveLang(v))
+// Watch theme changes
 watch(theme, (v) => {
-  saveTheme(v)
   applyTheme(v)
 })
 
@@ -35,17 +40,14 @@ function toggleTheme(): void {
 
     if (!startViewTransition) {
       theme.value = next
-      applyTheme(next)
       return
     }
 
     startViewTransition(() => {
       theme.value = next
-      applyTheme(next)
     })
   } catch {
     theme.value = next
-    applyTheme(next)
   }
 }
 

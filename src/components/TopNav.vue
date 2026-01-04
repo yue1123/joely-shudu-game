@@ -4,12 +4,13 @@
 
 	import { Icon } from '@iconify/vue'
 
-	import { t } from '../i18n'
-	import { useUiStore } from '../stores/uiStore'
+	import { useI18n } from '../composables'
+	import { useUiStore } from '../stores'
 
 	const router = useRouter()
 	const route = useRoute()
 	const ui = useUiStore()
+	const { translations } = useI18n()
 
 	const canGoBack = computed(() => route.path !== '/')
 
@@ -42,7 +43,7 @@
 
 				<div class="flex items-center gap-2">
 					<div class="font-mono text-sm font-extrabold tracking-tight">
-						{{ t(ui.lang, 'appTitle') }}
+						{{ translations.appTitle }}
 					</div>
 				</div>
 			</div>
@@ -51,7 +52,8 @@
 
 			<div class="flex items-center gap-2">
 				<select
-					v-model="ui.lang"
+					:value="ui.lang.value"
+					@change="(e: Event) => (ui.lang.value = (e.target as HTMLSelectElement).value as 'zh' | 'en')"
 					class="select select-ghost h-10 border border-base-content font-mono text-sm font-bold shadow-none"
 					aria-label="Language"
 				>

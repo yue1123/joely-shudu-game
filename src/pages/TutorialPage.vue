@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { marked } from 'marked'
 
 import TopNav from '../components/TopNav.vue'
-import { useUiStore } from '../stores/uiStore'
+import { useUiStore } from '../stores'
 
 import tutorialEn from '../content/tutorial.en.md?raw'
 import tutorialZh from '../content/tutorial.zh.md?raw'

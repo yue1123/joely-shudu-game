@@ -1,32 +1,6 @@
-import type { Language } from './uiState'
-import { unref, type Ref } from 'vue'
-
-export type I18nKey =
-  | 'appTitle'
-  | 'back'
-  | 'language'
-  | 'theme'
-  | 'difficulty'
-  | 'easy'
-  | 'medium'
-  | 'hard'
-  | 'chooseDifficulty'
-  | 'continueGame'
-  | 'newGame'
-  | 'tutorial'
-  | 'hint'
-  | 'timer'
-  | 'hintsUsed'
-  | 'mistakes'
-  | 'continue'
-  | 'saved'
-  | 'completed'
-  | 'leaderboard'
-  | 'bestTimes'
-  | 'noRecords'
-  | 'tutorialTitle'
-  | 'undo'
-  | 'clear'
+import { computed } from 'vue'
+import type { I18nKey, Language } from '../types'
+import { useUiStore } from '../stores/uiStore'
 
 const DICT: Record<Language, Record<I18nKey, string>> = {
   zh: {
@@ -85,9 +59,32 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
   },
 }
 
-type MaybeRef<T> = T | Ref<T>
+/**
+ * Composable for i18n translations
+ * Automatically uses the current language from uiStore
+ */
+export function useI18n() {
+  const ui = useUiStore()
 
-export function t(lang: MaybeRef<Language>, key: I18nKey): string {
-  const resolved = unref(lang)
-  return DICT[resolved]?.[key] ?? key
+  // Create a reactive translate function
+  function t(key: I18nKey): string {
+    return DICT[ui.lang.value]?.[key] ?? key
+  }
+
+  const locale = computed(() => ui.lang.value)
+
+  // Return reactive translations object for template use
+  const translations = computed(() => {
+    const lang = ui.lang.value
+    return DICT[lang]
+  })
+
+  return { t, locale, translations }
+}
+
+/**
+ * Direct translation function (for use outside of setup)
+ */
+export function translate(lang: Language, key: I18nKey): string {
+  return DICT[lang]?.[key] ?? key
 }
