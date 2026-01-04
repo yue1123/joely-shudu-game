@@ -191,6 +191,10 @@ function inputDigit(value: number): void {
   const prev = board.value[row]![col]!
   if (prev === value) return
 
+  // Once a digit is filled, it can't be replaced by another digit directly.
+  // Users must erase (set to 0) or undo first.
+  if (prev !== 0 && value !== 0) return
+
   history.value.push(cloneBoard(board.value))
 
   board.value = setCell(board.value, row, col, value)
@@ -214,6 +218,9 @@ function hint(): void {
   if (!board.value || !solution.value || !given.value || !selected.value) return
   const { row, col } = selected.value
   if (given.value[row]![col]!) return
+
+  // Hint only fills empty editable cells.
+  if (board.value[row]![col]! !== 0) return
   const correct = solution.value[row]![col]!
 
   history.value.push(cloneBoard(board.value))
