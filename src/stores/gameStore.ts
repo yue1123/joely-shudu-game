@@ -1,6 +1,6 @@
 import { computed, ref, shallowRef } from 'vue'
 import type { Board, Difficulty, Digit } from '../sudoku'
-import type { CellPosition, SaveState } from '../types'
+import type { CellPosition, SaveState, NotesGrid, SerializedNotes } from '../types'
 import {
   cloneBoard,
   findConflicts,
@@ -32,6 +32,10 @@ const maxErrors = ref(3)
 const lastSavedAt = ref<number | null>(null)
 
 const history = shallowRef<Board[]>([])
+
+// Notes/Marks state
+const notes = shallowRef<NotesGrid | null>(null)
+const isNotesMode = ref(false)
 
 // ============ Computed ============
 
@@ -74,6 +78,28 @@ const wrongSet = computed(() => {
 
 // ============ Actions ============
 
+/** Create empty notes grid */
+function createEmptyNotes(): NotesGrid {
+  return Array.from({ length: 9 }, () =>
+    Array.from({ length: 9 }, () => new Set<Exclude<Digit, 0>>())
+  )
+}
+
+/** Clone notes grid */
+function cloneNotes(n: NotesGrid): NotesGrid {
+  return n.map(row => row.map(cell => new Set(cell)))
+}
+
+/** Serialize notes for storage */
+function serializeNotes(n: NotesGrid): SerializedNotes {
+  return n.map(row => row.map(cell => Array.from(cell)))
+}
+
+/** Deserialize notes from storage */
+function deserializeNotes(s: SerializedNotes): NotesGrid {
+  return s.map(row => row.map(cell => new Set(cell as Exclude<Digit, 0>[])))
+}
+
 function newGame(nextDifficulty: Difficulty): void {
   const g = generatePuzzle(nextDifficulty)
   difficulty.value = nextDifficulty
@@ -88,6 +114,8 @@ function newGame(nextDifficulty: Difficulty): void {
   errorsCount.value = 0
   history.value = []
   lastSavedAt.value = null
+  notes.value = createEmptyNotes()
+  isNotesMode.value = false
 }
 
 function selectCell(row: number, col: number): void {
@@ -105,6 +133,11 @@ function inputDigit(value: number): boolean {
   const { row, col } = selected.value
   if (given.value[row]![col]!) return false
 
+  // Notes mode: toggle note instead of filling digit
+  if (isNotesMode.value && value >= 1 && value <= 9) {
+    return toggleNote(row, col, value as Exclude<Digit, 0>)
+  }
+
   if (value >= 1 && value <= 9) {
     selectedDigit.value = value as Exclude<Digit, 0>
   }
@@ -118,6 +151,13 @@ function inputDigit(value: number): boolean {
   history.value = [...history.value, cloneBoard(board.value)]
   board.value = setCell(board.value, row, col, value)
 
+  // Clear notes for this cell when filling a digit
+  if (value !== 0 && notes.value) {
+    const newNotes = cloneNotes(notes.value)
+    newNotes[row]![col]!.clear()
+    notes.value = newNotes
+  }
+
   const correct = solution.value[row]?.[col]
   if (typeof correct === 'number' && value !== 0 && value !== correct) {
     errorsCount.value += 1
@@ -127,7 +167,52 @@ function inputDigit(value: number): boolean {
 }
 
 function clearCell(): boolean {
-  return inputDigit(0)
+  if (!selected.value || !board.value || !given.value) return false
+  const { row, col } = selected.value
+  if (given.value[row]![col]!) return false
+
+  // Clear notes for this cell
+  if (notes.value && notes.value[row]![col]!.size > 0) {
+    const newNotes = cloneNotes(notes.value)
+    newNotes[row]![col]!.clear()
+    notes.value = newNotes
+  }
+
+  // Clear digit
+  if (board.value[row]![col]! !== 0) {
+    return inputDigit(0)
+  }
+
+  return true
+}
+
+/** Toggle a note (candidate mark) for a cell */
+function toggleNote(row: number, col: number, digit: Exclude<Digit, 0>): boolean {
+  if (!notes.value || !board.value || !given.value) return false
+  if (given.value[row]![col]!) return false
+  if (board.value[row]![col]! !== 0) return false // Can't add notes to filled cells
+
+  const newNotes = cloneNotes(notes.value)
+  const cellNotes = newNotes[row]![col]!
+
+  if (cellNotes.has(digit)) {
+    cellNotes.delete(digit)
+  } else {
+    cellNotes.add(digit)
+  }
+
+  notes.value = newNotes
+  return true
+}
+
+/** Toggle notes mode on/off */
+function toggleNotesMode(): void {
+  isNotesMode.value = !isNotesMode.value
+}
+
+/** Get notes for a cell */
+function getCellNotes(row: number, col: number): Set<Exclude<Digit, 0>> {
+  return notes.value?.[row]?.[col] ?? new Set()
 }
 
 function hint(): boolean {
@@ -195,6 +280,7 @@ function persistSave(): void {
     hintsUsed: hintsUsed.value,
     errorsCount: errorsCount.value,
     maxErrors: maxErrors.value,
+    notes: notes.value ? serializeNotes(notes.value) : undefined,
   }
 
   setStorageItem(STORAGE_KEYS.SAVE, state)
@@ -224,6 +310,8 @@ function continueSavedGame(): boolean {
   selected.value = null
   selectedDigit.value = null
   history.value = []
+  notes.value = saved.notes ? deserializeNotes(saved.notes) : createEmptyNotes()
+  isNotesMode.value = false
 
   return true
 }
@@ -234,6 +322,15 @@ function clearSave(): void {
 
 function hasSave(): boolean {
   return loadSave() !== null
+}
+
+function getSaveInfo(): { difficulty: Difficulty; elapsedSeconds: number } | null {
+  const saved = loadSave()
+  if (!saved) return null
+  return {
+    difficulty: saved.difficulty,
+    elapsedSeconds: saved.elapsedSeconds,
+  }
 }
 
 // ============ Helpers ============
@@ -293,6 +390,8 @@ export function useGameStore() {
     maxErrors,
     lastSavedAt,
     history,
+    notes,
+    isNotesMode,
 
     // Computed
     isReady,
@@ -312,6 +411,8 @@ export function useGameStore() {
     setMaxErrors,
     setElapsedSeconds,
     incrementTime,
+    toggleNote,
+    toggleNotesMode,
 
     // Persistence
     persistSave,
@@ -319,6 +420,7 @@ export function useGameStore() {
     continueSavedGame,
     clearSave,
     hasSave,
+    getSaveInfo,
 
     // Helpers
     isSelectedCell,
@@ -328,5 +430,6 @@ export function useGameStore() {
     isSameDigitCell,
     getCellValue,
     isGivenCell,
+    getCellNotes,
   }
 }

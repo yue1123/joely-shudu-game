@@ -1,5 +1,14 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 import { useGameStore } from '../../stores'
+
+defineProps<{
+  isPaused?: boolean
+}>()
+
+const emit = defineEmits<{
+  resume: []
+}>()
 
 const game = useGameStore()
 
@@ -50,24 +59,66 @@ function getCellClasses(row: number, col: number): string[] {
 function handleCellClick(row: number, col: number): void {
   game.selectCell(row, col)
 }
+
+/** Check if a cell has notes to display */
+function hasNotes(row: number, col: number): boolean {
+  const cellValue = game.getCellValue(row, col)
+  if (cellValue !== 0) return false
+  return game.getCellNotes(row, col).size > 0
+}
+
+/** Get notes array for display (sorted 1-9) */
+function getNotesArray(row: number, col: number): number[] {
+  return Array.from(game.getCellNotes(row, col)).sort((a, b) => a - b)
+}
 </script>
 
 <template>
   <div
-    class="mx-auto grid aspect-square w-full max-w-xl grid-rows-9 overflow-hidden border-2"
+    class="relative mx-auto grid aspect-square w-full max-w-xl grid-rows-9 overflow-hidden border-2"
     :class="frameClass"
   >
+    <!-- Game grid -->
     <div v-for="r in 9" :key="r" class="grid grid-cols-9">
       <button
         v-for="c in 9"
         :key="c"
         type="button"
-        class="grid place-items-center font-mono text-lg font-extrabold outline-none transition-none group-hover:transition-[background-color] group-hover:duration-200"
+        class="relative grid place-items-center font-mono text-lg font-extrabold outline-none transition-none group-hover:transition-[background-color] group-hover:duration-200"
         :class="getCellClasses(r - 1, c - 1)"
+        :disabled="isPaused"
         @click="handleCellClick(r - 1, c - 1)"
       >
-        {{ game.getCellValue(r - 1, c - 1) === 0 ? '' : game.getCellValue(r - 1, c - 1) }}
+        <!-- Content hidden when paused -->
+        <template v-if="!isPaused">
+          <!-- Main digit -->
+          <span v-if="game.getCellValue(r - 1, c - 1) !== 0">
+            {{ game.getCellValue(r - 1, c - 1) }}
+          </span>
+          <!-- Notes grid (3x3 mini grid) -->
+          <div
+            v-else-if="hasNotes(r - 1, c - 1)"
+            class="grid h-full w-full grid-cols-3 grid-rows-3 p-0.5"
+          >
+            <span
+              v-for="n in 9"
+              :key="n"
+              class="flex items-center justify-center text-[0.5rem] leading-none opacity-60 sm:text-[0.6rem]"
+            >
+              {{ getNotesArray(r - 1, c - 1).includes(n) ? n : '' }}
+            </span>
+          </div>
+        </template>
       </button>
+    </div>
+
+    <!-- Pause overlay (transparent, only for click to resume) -->
+    <div
+      v-if="isPaused"
+      class="absolute inset-0 flex cursor-pointer items-center justify-center"
+      @click="emit('resume')"
+    >
+      <Icon icon="tabler:player-play" class="h-24 w-24 opacity-60 hover:opacity-100" />
     </div>
   </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useDocumentVisibility, useWindowFocus } from '@vueuse/core'
 
 import TopNav from '../components/TopNav.vue'
 import { SudokuBoard, NumberPad, ActionBar, GameStats } from '../components/game'
@@ -11,6 +12,26 @@ const route = useRoute()
 const game = useGameStore()
 const leaderboard = useLeaderboardStore()
 
+// Pause state
+const isPaused = ref(false)
+
+// VueUse hooks for visibility detection
+const documentVisibility = useDocumentVisibility()
+const windowFocus = useWindowFocus()
+
+// Watch for visibility/focus changes to auto-pause
+watch(documentVisibility, (visibility) => {
+  if (visibility === 'hidden' && game.isReady.value && !game.isCompleted.value && !game.isLocked.value) {
+    pauseGame()
+  }
+})
+
+watch(windowFocus, (focused) => {
+  if (!focused && game.isReady.value && !game.isCompleted.value && !game.isLocked.value) {
+    pauseGame()
+  }
+})
+
 // Timer management
 let timerId: number | null = null
 let saveDebounceId: number | null = null
@@ -18,9 +39,11 @@ let saveDebounceId: number | null = null
 function startTimer(): void {
   stopTimer()
   timerId = window.setInterval(() => {
-    game.incrementTime()
-    if (game.elapsedSeconds.value % 5 === 0) {
-      persistSaveSoon()
+    if (!isPaused.value) {
+      game.incrementTime()
+      if (game.elapsedSeconds.value % 5 === 0) {
+        persistSaveSoon()
+      }
     }
   }, 1000)
 }
@@ -29,6 +52,24 @@ function stopTimer(): void {
   if (timerId !== null) {
     window.clearInterval(timerId)
     timerId = null
+  }
+}
+
+// Pause/Resume functions
+function pauseGame(): void {
+  if (game.isCompleted.value || game.isLocked.value) return
+  isPaused.value = true
+}
+
+function resumeGame(): void {
+  isPaused.value = false
+}
+
+function togglePause(): void {
+  if (isPaused.value) {
+    resumeGame()
+  } else {
+    pauseGame()
   }
 }
 
@@ -47,6 +88,7 @@ const canUndo = computed(() => game.history.value.length > 0)
 const canHint = computed(() => game.selected.value !== null)
 const canClear = computed(() => game.selected.value !== null)
 const showSaved = computed(() => game.lastSavedAt.value !== null)
+const isDisabled = computed(() => game.isLocked.value || isPaused.value)
 
 // Actions
 function handleDigitPress(digit: Exclude<Digit, 0>): void {
@@ -71,6 +113,10 @@ function handleClear(): void {
   persistSaveSoon()
 }
 
+function handleToggleNotes(): void {
+  game.toggleNotesMode()
+}
+
 function checkCompletion(): void {
   if (game.isCompleted.value) {
     stopTimer()
@@ -85,6 +131,17 @@ function checkCompletion(): void {
 
 function onKeyDown(e: KeyboardEvent): void {
   if (!game.isReady.value) return
+
+  // Space to toggle pause
+  if (e.key === ' ' || e.code === 'Space') {
+    e.preventDefault()
+    togglePause()
+    return
+  }
+
+  // Don't process other keys when paused
+  if (isPaused.value) return
+
   if (e.key >= '1' && e.key <= '9') {
     handleDigitPress(Number(e.key) as Exclude<Digit, 0>)
   } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
@@ -157,16 +214,13 @@ onBeforeUnmount(() => {
           :max-errors="game.maxErrors.value"
           :difficulty="game.difficulty.value"
           :show-saved="showSaved"
+          :is-paused="isPaused"
+          @toggle-pause="togglePause"
         />
 
         <!-- Game Board -->
         <div v-if="game.isReady.value" class="mt-4">
-          <SudokuBoard />
-
-          <!-- Number Pad -->
-          <div class="mt-4">
-            <NumberPad :disabled="game.isLocked.value" @press="handleDigitPress" />
-          </div>
+          <SudokuBoard :is-paused="isPaused" @resume="resumeGame" />
 
           <!-- Action Buttons -->
           <div class="mt-3">
@@ -174,11 +228,18 @@ onBeforeUnmount(() => {
               :can-undo="canUndo"
               :can-hint="canHint"
               :can-clear="canClear"
-              :disabled="game.isLocked.value"
+              :is-notes-mode="game.isNotesMode.value"
+              :disabled="isDisabled"
               @undo="handleUndo"
               @hint="handleHint"
               @clear="handleClear"
+              @toggle-notes="handleToggleNotes"
             />
+          </div>
+
+          <!-- Number Pad -->
+          <div class="mt-4">
+            <NumberPad :disabled="isDisabled" @press="handleDigitPress" />
           </div>
         </div>
       </div>

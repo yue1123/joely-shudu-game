@@ -26,3 +26,4 @@ export type I18nKey =
   | 'tutorialTitle'
   | 'undo'
   | 'clear'
+  | 'notes'

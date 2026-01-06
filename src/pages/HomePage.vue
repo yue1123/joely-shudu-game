@@ -12,6 +12,14 @@ const route = useRoute()
 const game = useGameStore()
 const { translations } = useI18n()
 
+const saveInfo = computed(() => game.getSaveInfo())
+
+function formatTime(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 const isNewFlow = computed(() => route.name === 'new')
 
 const showContinue = computed(() => !isNewFlow.value && game.hasSave())
@@ -47,7 +55,12 @@ function openTutorial(): void {
       <div class="w-full max-w-md">
         <div v-if="!isNewFlow" class="grid gap-3">
           <button v-if="showContinue" type="button" :class="primaryBtn" @click="continueGame">
-            {{ translations.continueGame }}
+            <div class="flex flex-col items-center gap-0.5">
+              <span>{{ translations.continueGame }}</span>
+              <span v-if="saveInfo" class="text-xs font-normal opacity-60">
+                {{ translations[saveInfo.difficulty] }} · {{ formatTime(saveInfo.elapsedSeconds) }}
+              </span>
+            </div>
           </button>
 
           <button type="button" :class="primaryBtn" @click="goToNewFlow">

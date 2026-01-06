@@ -29,6 +29,7 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
     tutorialTitle: '玩法教程',
     undo: '撤销',
     clear: '擦除',
+    notes: '标记',
   },
   en: {
     appTitle: 'Joely Sudoku',
@@ -56,6 +57,7 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
     tutorialTitle: 'How to Play',
     undo: 'Undo',
     clear: 'Erase',
+    notes: 'Notes',
   },
 }
 

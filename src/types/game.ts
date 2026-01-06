@@ -1,4 +1,13 @@
-import type { Board, Difficulty } from '../sudoku'
+import type { Board, Difficulty, Digit } from '../sudoku'
+
+/** Cell notes/marks - which digits are marked as candidates */
+export type CellNotes = Set<Exclude<Digit, 0>>
+
+/** Notes grid - 9x9 array of CellNotes */
+export type NotesGrid = CellNotes[][]
+
+/** Serializable notes format for storage */
+export type SerializedNotes = number[][][]
 
 /** Persisted game save state */
 export type SaveState = {
@@ -12,6 +21,7 @@ export type SaveState = {
   hintsUsed: number
   errorsCount?: number
   maxErrors?: number
+  notes?: SerializedNotes
 }
 
 /** Single leaderboard entry */

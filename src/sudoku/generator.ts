@@ -4,12 +4,14 @@ import { countSolutions, solve } from './solver'
 
 type DifficultyConfig = {
   clues: { min: number; max: number }
+  /** Minimum empty cells per 3x3 box to ensure balanced distribution */
+  minEmptyPerBox: number
 }
 
 const DIFFICULTY: Record<Difficulty, DifficultyConfig> = {
-  easy: { clues: { min: 40, max: 46 } },
-  medium: { clues: { min: 32, max: 38 } },
-  hard: { clues: { min: 26, max: 31 } },
+  easy: { clues: { min: 40, max: 46 }, minEmptyPerBox: 2 },
+  medium: { clues: { min: 32, max: 38 }, minEmptyPerBox: 4 },
+  hard: { clues: { min: 26, max: 31 }, minEmptyPerBox: 5 },
 }
 
 function makeRng(seed: number): () => number {
@@ -42,14 +44,20 @@ function fillDiagonalBoxes(board: Board, rng: () => number): void {
   }
 }
 
-function allCellPositions(): Array<{ row: number; col: number }> {
-  const cells: Array<{ row: number; col: number }> = []
+/** Get box index (0-8) for a cell */
+function getBoxIndex(row: number, col: number): number {
+  return Math.floor(row / 3) * 3 + Math.floor(col / 3)
+}
+
+/** Get all cell positions grouped by box */
+function getCellsByBox(): Array<Array<{ row: number; col: number }>> {
+  const boxes: Array<Array<{ row: number; col: number }>> = Array.from({ length: 9 }, () => [])
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
-      cells.push({ row, col })
+      boxes[getBoxIndex(row, col)]!.push({ row, col })
     }
   }
-  return cells
+  return boxes
 }
 
 export function generatePuzzle(difficulty: Difficulty): GeneratedPuzzle {
@@ -69,28 +77,83 @@ export function generatePuzzle(difficulty: Difficulty): GeneratedPuzzle {
 }
 
 function generateFromSolution(solution: Board, difficulty: Difficulty, rng: () => number): GeneratedPuzzle {
-  const { clues } = DIFFICULTY[difficulty]
+  const { clues, minEmptyPerBox } = DIFFICULTY[difficulty]
   const targetClues = Math.floor(clues.min + rng() * (clues.max - clues.min + 1))
-
-  let puzzle = cloneBoard(solution)
-  const positions = allCellPositions()
-  shuffleInPlace(positions, rng)
-
-  let removed = 0
   const maxToRemove = 81 - targetClues
 
-  for (const { row, col } of positions) {
-    if (removed >= maxToRemove) break
-    const backup = puzzle[row]![col]!
-    if (backup === 0) continue
+  const puzzle = cloneBoard(solution)
+  const cellsByBox = getCellsByBox()
+  
+  // Shuffle cells within each box
+  for (const box of cellsByBox) {
+    shuffleInPlace(box, rng)
+  }
 
-    puzzle[row]![col]! = 0
-    const solutions = countSolutions(puzzle, 2)
-    if (solutions !== 1) {
-      puzzle[row]![col]! = backup
-      continue
+  // Track empty count per box
+  const emptyPerBox = new Array(9).fill(0)
+  let totalRemoved = 0
+
+  // Phase 1: Ensure minimum empty cells per box for balanced distribution
+  for (let boxIdx = 0; boxIdx < 9; boxIdx++) {
+    const boxCells = cellsByBox[boxIdx]!
+    let boxRemoved = 0
+    
+    for (const { row, col } of boxCells) {
+      if (boxRemoved >= minEmptyPerBox) break
+      if (totalRemoved >= maxToRemove) break
+      
+      const backup = puzzle[row]![col]!
+      if (backup === 0) continue
+
+      puzzle[row]![col]! = 0
+      const solutions = countSolutions(puzzle, 2)
+      if (solutions !== 1) {
+        puzzle[row]![col]! = backup
+        continue
+      }
+      
+      boxRemoved++
+      totalRemoved++
+      emptyPerBox[boxIdx] = boxRemoved
     }
-    removed++
+  }
+
+  // Phase 2: Remove remaining cells randomly while maintaining unique solution
+  if (totalRemoved < maxToRemove) {
+    // Collect all remaining filled cells
+    const remainingCells: Array<{ row: number; col: number }> = []
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (puzzle[row]![col]! !== 0) {
+          remainingCells.push({ row, col })
+        }
+      }
+    }
+    shuffleInPlace(remainingCells, rng)
+
+    for (const { row, col } of remainingCells) {
+      if (totalRemoved >= maxToRemove) break
+      
+      const backup = puzzle[row]![col]!
+      if (backup === 0) continue
+
+      puzzle[row]![col]! = 0
+      const solutions = countSolutions(puzzle, 2)
+      if (solutions !== 1) {
+        puzzle[row]![col]! = backup
+        continue
+      }
+      
+      totalRemoved++
+    }
+  }
+
+  // Final verification: ensure puzzle has exactly one solution
+  const finalCheck = countSolutions(puzzle, 2)
+  if (finalCheck !== 1) {
+    console.warn('Generated puzzle verification failed, regenerating...')
+    // This should never happen, but fallback to regenerate
+    return generateFromSolution(solution, difficulty, rng)
   }
 
   const given = puzzle.map((r) => r.map((v) => v !== 0))
