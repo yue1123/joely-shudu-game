@@ -1,11 +1,12 @@
 <script setup lang="ts">
-	import { computed } from 'vue'
+	import { computed, ref } from 'vue'
 	import { useRoute, useRouter } from 'vue-router'
 
 	import { Icon } from '@iconify/vue'
 
 	import { useI18n, useSound } from '../composables'
 	import { useUiStore } from '../stores'
+	import ShortcutsModal from './ShortcutsModal.vue'
 
 	const router = useRouter()
 	const route = useRoute()
@@ -14,6 +15,7 @@
 	const sound = useSound()
 
 	const canGoBack = computed(() => route.path !== '/')
+	const showShortcuts = ref(false)
 
 	function goBack(): void {
 		if (window.history.length > 1) {
@@ -62,6 +64,10 @@
 					<option value="en">English</option>
 				</select>
 
+				<button type="button" :class="btnSquare" @click="showShortcuts = true" :aria-label="translations.shortcuts">
+					<Icon icon="tabler:keyboard" class="h-4 w-4" />
+				</button>
+
 				<button type="button" :class="btnSquare" @click="sound.toggleSound" aria-label="Sound">
 					<Icon v-if="sound.soundEnabled.value" icon="tabler:volume" class="h-4 w-4" />
 					<Icon v-else icon="tabler:volume-off" class="h-4 w-4" />
@@ -74,4 +80,6 @@
 			</div>
 		</div>
 	</header>
+
+	<ShortcutsModal :show="showShortcuts" @close="showShortcuts = false" />
 </template>
