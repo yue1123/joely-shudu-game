@@ -243,10 +243,36 @@ function inputDigit(value: number): boolean {
   history.value = [...history.value, cloneBoard(board.value)]
   board.value = setCell(board.value, row, col, value)
 
-  // Clear notes for this cell when filling a digit
+  // Clear notes for this cell and remove this digit from related cells' notes
   if (value !== 0 && notes.value) {
     const newNotes = cloneNotes(notes.value)
+    // Clear this cell's notes
     newNotes[row]![col]!.clear()
+    
+    // If the digit is correct, remove it from notes of related cells (same row, col, box)
+    const digit = value as Exclude<Digit, 0>
+    const isCorrect = solution.value?.[row]?.[col] === value
+    if (isCorrect) {
+      // Remove from same row
+      for (let c = 0; c < 9; c++) {
+        if (c !== col) newNotes[row]![c]!.delete(digit)
+      }
+      // Remove from same column
+      for (let r = 0; r < 9; r++) {
+        if (r !== row) newNotes[r]![col]!.delete(digit)
+      }
+      // Remove from same 3x3 box
+      const boxRowStart = Math.floor(row / 3) * 3
+      const boxColStart = Math.floor(col / 3) * 3
+      for (let r = boxRowStart; r < boxRowStart + 3; r++) {
+        for (let c = boxColStart; c < boxColStart + 3; c++) {
+          if (r !== row || c !== col) {
+            newNotes[r]![c]!.delete(digit)
+          }
+        }
+      }
+    }
+    
     notes.value = newNotes
   }
 

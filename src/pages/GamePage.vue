@@ -91,6 +91,8 @@ function persistSaveSoon(): void {
   if (saveDebounceId !== null) window.clearTimeout(saveDebounceId)
   saveDebounceId = window.setTimeout(() => {
     saveDebounceId = null
+    // Don't save if game is already completed
+    if (game.isCompleted.value) return
     game.persistSave()
   }, 400)
 }

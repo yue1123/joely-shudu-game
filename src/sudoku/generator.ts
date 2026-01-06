@@ -9,9 +9,10 @@ type DifficultyConfig = {
 }
 
 const DIFFICULTY: Record<Difficulty, DifficultyConfig> = {
-  easy: { clues: { min: 40, max: 46 }, minEmptyPerBox: 2 },
-  medium: { clues: { min: 32, max: 38 }, minEmptyPerBox: 4 },
-  hard: { clues: { min: 26, max: 31 }, minEmptyPerBox: 5 },
+	easy: { clues: { min: 40, max: 46 }, minEmptyPerBox: 2 },
+	// easy: { clues: { min: 75, max: 80 }, minEmptyPerBox: 2 },
+	medium: { clues: { min: 32, max: 38 }, minEmptyPerBox: 4 },
+	hard: { clues: { min: 26, max: 31 }, minEmptyPerBox: 5 }
 }
 
 function makeRng(seed: number): () => number {
