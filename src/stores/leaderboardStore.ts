@@ -51,6 +51,13 @@ function getEntries(difficulty: Difficulty): LeaderboardEntry[] {
   return leaderboardData.value[difficulty]
 }
 
+function getBestForDifficulty(difficulty: Difficulty): LeaderboardEntry | null {
+  const entries = leaderboardData.value[difficulty]
+  if (entries.length === 0) return null
+  // Already sorted by seconds, so first is best
+  return entries[0] ?? null
+}
+
 function clearAll(): void {
   leaderboardData.value = createEmptyState()
 }
@@ -70,6 +77,7 @@ export function useLeaderboardStore() {
     setTab,
     addEntry,
     getEntries,
+    getBestForDifficulty,
     clearAll,
   }
 }

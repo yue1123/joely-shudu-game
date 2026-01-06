@@ -30,6 +30,12 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
     undo: '撤销',
     clear: '擦除',
     notes: '标记',
+    victory: '恭喜完成！',
+    yourTime: '用时',
+    bestTime: '最佳',
+    newRecord: '新纪录！',
+    playAgain: '再来一局',
+    backToHome: '返回首页',
   },
   en: {
     appTitle: 'Joely Sudoku',
@@ -58,6 +64,12 @@ const DICT: Record<Language, Record<I18nKey, string>> = {
     undo: 'Undo',
     clear: 'Erase',
     notes: 'Notes',
+    victory: 'Congratulations!',
+    yourTime: 'Your time',
+    bestTime: 'Best',
+    newRecord: 'New Record!',
+    playAgain: 'Play Again',
+    backToHome: 'Home',
   },
 }
 

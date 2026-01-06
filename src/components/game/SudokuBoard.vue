@@ -53,6 +53,14 @@ function getCellClasses(row: number, col: number): string[] {
     classes.push('text-red-600')
   }
 
+  // Animation classes
+  if (game.lastFilledCell.value?.row === row && game.lastFilledCell.value?.col === col) {
+    classes.push('animate-cell-pop')
+  }
+  if (game.lastErrorCell.value?.row === row && game.lastErrorCell.value?.col === col) {
+    classes.push('animate-cell-shake')
+  }
+
   return classes
 }
 

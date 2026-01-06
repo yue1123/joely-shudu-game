@@ -37,6 +37,10 @@ const history = shallowRef<Board[]>([])
 const notes = shallowRef<NotesGrid | null>(null)
 const isNotesMode = ref(false)
 
+// Animation tracking
+const lastFilledCell = ref<CellPosition | null>(null)
+const lastErrorCell = ref<CellPosition | null>(null)
+
 // ============ Computed ============
 
 const isReady = computed(() =>
@@ -74,6 +78,64 @@ const wrongSet = computed(() => {
     }
   }
   return set
+})
+
+/** Count how many times each digit (1-9) appears on the board */
+const digitCounts = computed(() => {
+  const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }
+  if (!board.value) return counts
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      const v = board.value[row]![col]!
+      if (v >= 1 && v <= 9) {
+        const count = counts[v]
+        if (typeof count === 'number') {
+          counts[v] = count + 1
+        }
+      }
+    }
+  }
+  return counts
+})
+
+/** Get remaining count for a digit (9 - current count) */
+const digitRemaining = computed(() => {
+  const remaining: Record<number, number> = {}
+  for (let d = 1; d <= 9; d++) {
+    remaining[d] = 9 - (digitCounts.value[d] ?? 0)
+  }
+  return remaining
+})
+
+/** Count total empty cells remaining */
+const emptyCellsCount = computed(() => {
+  if (!board.value) return 81
+  let count = 0
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (board.value[row]![col]! === 0) {
+        count++
+      }
+    }
+  }
+  return count
+})
+
+/** Progress percentage (0-100) */
+const progressPercent = computed(() => {
+  if (!puzzle.value) return 0
+  // Count initial empty cells from puzzle
+  let initialEmpty = 0
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (puzzle.value[row]![col]! === 0) {
+        initialEmpty++
+      }
+    }
+  }
+  if (initialEmpty === 0) return 100
+  const filled = initialEmpty - emptyCellsCount.value
+  return Math.round((filled / initialEmpty) * 100)
 })
 
 // ============ Actions ============
@@ -126,6 +188,36 @@ function selectCell(row: number, col: number): void {
   if (v !== 0) selectedDigit.value = v as Exclude<Digit, 0>
 }
 
+/** Move selection in a direction */
+function moveSelection(direction: 'up' | 'down' | 'left' | 'right'): void {
+  if (!board.value) return
+
+  // If no cell selected, start from center
+  if (!selected.value) {
+    selectCell(4, 4)
+    return
+  }
+
+  let { row, col } = selected.value
+
+  switch (direction) {
+    case 'up':
+      row = row > 0 ? row - 1 : 8
+      break
+    case 'down':
+      row = row < 8 ? row + 1 : 0
+      break
+    case 'left':
+      col = col > 0 ? col - 1 : 8
+      break
+    case 'right':
+      col = col < 8 ? col + 1 : 0
+      break
+  }
+
+  selectCell(row, col)
+}
+
 function inputDigit(value: number): boolean {
   if (isLocked.value) return false
   if (!board.value || !given.value || !selected.value || !solution.value) return false
@@ -161,6 +253,21 @@ function inputDigit(value: number): boolean {
   const correct = solution.value[row]?.[col]
   if (typeof correct === 'number' && value !== 0 && value !== correct) {
     errorsCount.value += 1
+    // Trigger error animation
+    lastErrorCell.value = { row, col }
+    setTimeout(() => {
+      if (lastErrorCell.value?.row === row && lastErrorCell.value?.col === col) {
+        lastErrorCell.value = null
+      }
+    }, 300)
+  } else if (value !== 0) {
+    // Trigger fill animation for correct digits
+    lastFilledCell.value = { row, col }
+    setTimeout(() => {
+      if (lastFilledCell.value?.row === row && lastFilledCell.value?.col === col) {
+        lastFilledCell.value = null
+      }
+    }, 200)
   }
 
   return true
@@ -392,6 +499,8 @@ export function useGameStore() {
     history,
     notes,
     isNotesMode,
+    lastFilledCell,
+    lastErrorCell,
 
     // Computed
     isReady,
@@ -400,10 +509,15 @@ export function useGameStore() {
     conflicts,
     conflictSet,
     wrongSet,
+    digitCounts,
+    digitRemaining,
+    emptyCellsCount,
+    progressPercent,
 
     // Actions
     newGame,
     selectCell,
+    moveSelection,
     inputDigit,
     clearCell,
     hint,

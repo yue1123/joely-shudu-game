@@ -4,13 +4,14 @@
 
 	import { Icon } from '@iconify/vue'
 
-	import { useI18n } from '../composables'
+	import { useI18n, useSound } from '../composables'
 	import { useUiStore } from '../stores'
 
 	const router = useRouter()
 	const route = useRoute()
 	const ui = useUiStore()
 	const { translations } = useI18n()
+	const sound = useSound()
 
 	const canGoBack = computed(() => route.path !== '/')
 
@@ -60,6 +61,11 @@
 					<option value="zh">中文</option>
 					<option value="en">English</option>
 				</select>
+
+				<button type="button" :class="btnSquare" @click="sound.toggleSound" aria-label="Sound">
+					<Icon v-if="sound.soundEnabled.value" icon="tabler:volume" class="h-4 w-4" />
+					<Icon v-else icon="tabler:volume-off" class="h-4 w-4" />
+				</button>
 
 				<button type="button" :class="btnSquare" @click="ui.toggleTheme" aria-label="Theme">
 					<Icon v-if="ui.isDark" icon="tabler:sun" class="h-4 w-4" />

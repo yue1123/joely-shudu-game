@@ -8,3 +8,4 @@ export {
   setStorageItem,
   removeStorageItem,
 } from './useStorage'
+export { useSound } from './useSound'

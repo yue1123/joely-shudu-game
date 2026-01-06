@@ -1,19 +1,31 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDocumentVisibility, useWindowFocus } from '@vueuse/core'
 
 import TopNav from '../components/TopNav.vue'
-import { SudokuBoard, NumberPad, ActionBar, GameStats } from '../components/game'
+import { SudokuBoard, NumberPad, ActionBar, GameStats, Confetti, VictoryModal } from '../components/game'
 import { useGameStore, useLeaderboardStore } from '../stores'
+import { useSound } from '../composables'
 import type { Difficulty, Digit } from '../sudoku'
 
 const route = useRoute()
+const router = useRouter()
 const game = useGameStore()
 const leaderboard = useLeaderboardStore()
+const sound = useSound()
 
 // Pause state
 const isPaused = ref(false)
+const showConfetti = ref(false)
+const showVictoryModal = ref(false)
+const victoryStats = ref<{
+  difficulty: Difficulty
+  elapsedSeconds: number
+  hintsUsed: number
+  errorsCount: number
+  bestTime: number | null
+} | null>(null)
 
 // VueUse hooks for visibility detection
 const documentVisibility = useDocumentVisibility()
@@ -92,41 +104,101 @@ const isDisabled = computed(() => game.isLocked.value || isPaused.value)
 
 // Actions
 function handleDigitPress(digit: Exclude<Digit, 0>): void {
-  game.inputDigit(digit)
+  const prevErrors = game.errorsCount.value
+  const success = game.inputDigit(digit)
+  
+  if (success) {
+    if (game.errorsCount.value > prevErrors) {
+      sound.playError()
+    } else {
+      sound.playFill()
+    }
+  } else {
+    sound.playClick()
+  }
+  
   persistSaveSoon()
   checkCompletion()
 }
 
 function handleUndo(): void {
+  sound.playClick()
   game.undo()
   persistSaveSoon()
 }
 
 function handleHint(): void {
+  sound.playClick()
   game.hint()
   persistSaveSoon()
   checkCompletion()
 }
 
 function handleClear(): void {
+  sound.playClick()
   game.clearCell()
   persistSaveSoon()
 }
 
 function handleToggleNotes(): void {
+  sound.playClick()
   game.toggleNotesMode()
 }
 
 function checkCompletion(): void {
   if (game.isCompleted.value) {
     stopTimer()
+    showConfetti.value = true
+    sound.playSuccess()
+    
+    // Get best time before adding new entry
+    const bestEntry = leaderboard.getBestForDifficulty(game.difficulty.value)
+    const bestTime = bestEntry?.seconds ?? null
+    
+    // Save victory stats for modal
+    victoryStats.value = {
+      difficulty: game.difficulty.value,
+      elapsedSeconds: game.elapsedSeconds.value,
+      hintsUsed: game.hintsUsed.value,
+      errorsCount: game.errorsCount.value,
+      bestTime,
+    }
+    
     leaderboard.addEntry(
       game.difficulty.value,
       game.elapsedSeconds.value,
       game.hintsUsed.value
     )
     game.clearSave()
+    
+    // Show victory modal after a short delay
+    setTimeout(() => {
+      showVictoryModal.value = true
+    }, 500)
+    
+    // Hide confetti after animation
+    setTimeout(() => {
+      showConfetti.value = false
+    }, 3500)
   }
+}
+
+function handlePlayAgain(): void {
+  showVictoryModal.value = false
+  victoryStats.value = null
+  game.newGame(game.difficulty.value)
+  startTimer()
+  persistSaveSoon()
+}
+
+function handleGoHome(): void {
+  showVictoryModal.value = false
+  victoryStats.value = null
+  router.push({ name: 'home' })
+}
+
+function handleCloseVictory(): void {
+  showVictoryModal.value = false
 }
 
 function onKeyDown(e: KeyboardEvent): void {
@@ -139,13 +211,59 @@ function onKeyDown(e: KeyboardEvent): void {
     return
   }
 
-  // Don't process other keys when paused
-  if (isPaused.value) return
+  // Don't process other keys when paused or locked
+  if (isPaused.value || game.isLocked.value) return
 
+  // Number keys 1-9
   if (e.key >= '1' && e.key <= '9') {
     handleDigitPress(Number(e.key) as Exclude<Digit, 0>)
-  } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+    return
+  }
+
+  // Clear cell
+  if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
     handleClear()
+    return
+  }
+
+  // Arrow keys / WASD for navigation
+  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+    e.preventDefault()
+    game.moveSelection('up')
+    return
+  }
+  if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+    e.preventDefault()
+    game.moveSelection('down')
+    return
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+    e.preventDefault()
+    game.moveSelection('left')
+    return
+  }
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+    e.preventDefault()
+    game.moveSelection('right')
+    return
+  }
+
+  // N to toggle notes mode
+  if (e.key === 'n' || e.key === 'N') {
+    handleToggleNotes()
+    return
+  }
+
+  // Z/Ctrl+Z to undo
+  if (e.key === 'z' || e.key === 'Z') {
+    handleUndo()
+    return
+  }
+
+  // H for hint
+  if (e.key === 'h' || e.key === 'H') {
+    handleHint()
+    return
   }
 }
 
@@ -244,5 +362,22 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </main>
+
+    <!-- Confetti celebration -->
+    <Confetti v-if="showConfetti" />
+
+    <!-- Victory Modal -->
+    <VictoryModal
+      v-if="victoryStats"
+      :show="showVictoryModal"
+      :difficulty="victoryStats.difficulty"
+      :elapsed-seconds="victoryStats.elapsedSeconds"
+      :hints-used="victoryStats.hintsUsed"
+      :errors-count="victoryStats.errorsCount"
+      :best-time="victoryStats.bestTime"
+      @play-again="handlePlayAgain"
+      @go-home="handleGoHome"
+      @close="handleCloseVictory"
+    />
   </div>
 </template>
