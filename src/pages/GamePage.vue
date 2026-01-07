@@ -106,21 +106,37 @@ const isDisabled = computed(() => game.isLocked.value || isPaused.value)
 
 // Actions
 function handleDigitPress(digit: Exclude<Digit, 0>): void {
-  const prevErrors = game.errorsCount.value
-  const success = game.inputDigit(digit)
+  // Always set selectedDigit for highlighting
+  game.setSelectedDigit(digit)
   
-  if (success) {
-    if (game.errorsCount.value > prevErrors) {
-      sound.playError()
-    } else {
-      sound.playFill()
+  // Only try to fill if a cell is selected and it's empty
+  if (game.selected.value) {
+    const { row, col } = game.selected.value
+    const cellValue = game.getCellValue(row, col)
+    const isGiven = game.isGivenCell(row, col)
+    
+    // Only fill if it's an empty, non-given cell
+    if (!isGiven && cellValue === 0) {
+      const prevErrors = game.errorsCount.value
+      const success = game.inputDigit(digit)
+      
+      if (success) {
+        if (game.errorsCount.value > prevErrors) {
+          sound.playError()
+        } else {
+          sound.playFill()
+        }
+        persistSaveSoon()
+        checkCompletion()
+      } else {
+        sound.playClick()
+      }
+      return
     }
-  } else {
-    sound.playClick()
   }
   
-  persistSaveSoon()
-  checkCompletion()
+  // Just highlight, play click sound
+  sound.playClick()
 }
 
 function handleUndo(): void {

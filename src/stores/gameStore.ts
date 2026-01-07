@@ -188,6 +188,11 @@ function selectCell(row: number, col: number): void {
   if (v !== 0) selectedDigit.value = v as Exclude<Digit, 0>
 }
 
+/** Set selected digit for highlighting (without selecting a cell) */
+function setSelectedDigit(digit: Exclude<Digit, 0>): void {
+  selectedDigit.value = digit
+}
+
 /** Move selection in a direction */
 function moveSelection(direction: 'up' | 'down' | 'left' | 'right'): void {
   if (!board.value) return
@@ -543,6 +548,7 @@ export function useGameStore() {
     // Actions
     newGame,
     selectCell,
+    setSelectedDigit,
     moveSelection,
     inputDigit,
     clearCell,
