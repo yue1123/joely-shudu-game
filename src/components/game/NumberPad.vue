@@ -31,7 +31,7 @@ function getRemainingCount(n: number): number {
       v-for="n in 9"
       :key="n"
       type="button"
-      class="btn btn-ghost flex aspect-square w-full flex-col items-center justify-center border border-base-content p-0 font-mono shadow-none"
+      class="btn btn-ghost btn-lg flex aspect-square w-full flex-col items-center justify-center border border-base-content font-mono shadow-none"
       :class="{ 'opacity-30': isDigitComplete(n) }"
       :disabled="disabled || isDigitComplete(n)"
       @click="handlePress(n)"

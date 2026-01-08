@@ -50,15 +50,12 @@ function getCellClasses(row: number, col: number): string[] {
     classes.push('underline decoration-2 decoration-base-content')
   }
   if (game.wrongSet.value.has(`${row},${col}`)) {
-    classes.push('text-red-600')
+    classes.push('text-red-600', 'bg-red-100', 'dark:bg-red-950/30')
   }
 
   // Animation classes
   if (game.lastFilledCell.value?.row === row && game.lastFilledCell.value?.col === col) {
     classes.push('animate-cell-pop')
-  }
-  if (game.lastErrorCell.value?.row === row && game.lastErrorCell.value?.col === col) {
-    classes.push('animate-cell-shake')
   }
 
   return classes
@@ -92,7 +89,7 @@ function getNotesArray(row: number, col: number): number[] {
         v-for="c in 9"
         :key="c"
         type="button"
-        class="relative grid place-items-center font-mono text-lg font-extrabold outline-none transition-none group-hover:transition-[background-color] group-hover:duration-200"
+        class="relative grid place-items-center font-mono text-2xl font-medium outline-none transition-none group-hover:transition-[background-color] group-hover:duration-180"
         :class="getCellClasses(r - 1, c - 1)"
         :disabled="isPaused"
         @click="handleCellClick(r - 1, c - 1)"
@@ -100,7 +97,12 @@ function getNotesArray(row: number, col: number): number[] {
         <!-- Content hidden when paused -->
         <template v-if="!isPaused">
           <!-- Main digit -->
-          <span v-if="game.getCellValue(r - 1, c - 1) !== 0">
+          <span 
+            v-if="game.getCellValue(r - 1, c - 1) !== 0"
+            :class="{
+              'animate-cell-shake': game.lastErrorCell.value?.row === r - 1 && game.lastErrorCell.value?.col === c - 1
+            }"
+          >
             {{ game.getCellValue(r - 1, c - 1) }}
           </span>
           <!-- Notes grid (3x3 mini grid) -->
