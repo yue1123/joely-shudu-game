@@ -46,17 +46,11 @@ function getCellClasses(row: number, col: number): string[] {
   }
 
   // Conflict / Wrong classes
-  if (game.conflictSet.value.has(`${row},${col}`)) {
-    classes.push('underline decoration-2 decoration-base-content')
-  }
-  if (game.wrongSet.value.has(`${row},${col}`)) {
+  if (game.wrongSet.value.has(`${row},${col}`) || game.conflictSet.value.has(`${row},${col}`)) {
     classes.push('text-red-600', 'bg-red-100', 'dark:bg-red-950/30')
   }
 
-  // Animation classes
-  if (game.lastFilledCell.value?.row === row && game.lastFilledCell.value?.col === col) {
-    classes.push('animate-cell-pop')
-  }
+  // Animation classes - removed, now applied to digit span directly
 
   return classes
 }
@@ -100,6 +94,7 @@ function getNotesArray(row: number, col: number): number[] {
           <span 
             v-if="game.getCellValue(r - 1, c - 1) !== 0"
             :class="{
+              'animate-cell-pop': game.lastFilledCell.value?.row === r - 1 && game.lastFilledCell.value?.col === c - 1,
               'animate-cell-shake': game.lastErrorCell.value?.row === r - 1 && game.lastErrorCell.value?.col === c - 1
             }"
           >
