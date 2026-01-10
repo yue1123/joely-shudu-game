@@ -1,182 +1,183 @@
 @import 'tailwindcss';
 @plugin "daisyui" {
-  themes: all;
+	themes: all;
+	exclude: properties;
 }
 
 /* Minimal app-level defaults (keep layout stable across pages) */
 html,
 body,
 #app {
-  height: 100%;
+	height: 100%;
 }
 
 body {
-  min-width: 320px;
+	min-width: 320px;
 }
 
 :root {
-  view-transition-name: root;
+	view-transition-name: root;
 }
 
 ::view-transition-old(root) {
-  animation: none;
-  z-index: 1;
+	animation: none;
+	z-index: 1;
 }
 
 ::view-transition-new(root) {
-  animation: theme-wipe-in 260ms ease-out both;
-  z-index: 2;
+	animation: theme-wipe-in 260ms ease-out both;
+	z-index: 2;
 }
 
 @keyframes theme-wipe-in {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
+	from {
+		clip-path: inset(0 100% 0 0);
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none;
-  }
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+	}
 }
 
 @plugin "daisyui/theme" {
-  name: "light";
-  default: true;
-  prefersdark: false;
-  color-scheme: "light";
+	name: 'light';
+	default: true;
+	prefersdark: false;
+	color-scheme: 'light';
 
-  
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(97% 0 0);
-  --color-base-300: oklch(93% 0 0);
-  --color-base-content: oklch(0% 0 0);
+	--color-base-100: oklch(100% 0 0);
+	--color-base-200: oklch(97% 0 0);
+	--color-base-300: oklch(93% 0 0);
+	--color-base-content: oklch(0% 0 0);
 
-  --color-primary: oklch(0% 0 0);
-  --color-primary-content: oklch(100% 0 0);
-  --color-secondary: oklch(0% 0 0);
-  --color-secondary-content: oklch(100% 0 0);
-  --color-accent: oklch(0% 0 0);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(20% 0 0);
-  --color-neutral-content: oklch(100% 0 0);
+	--color-primary: oklch(0% 0 0);
+	--color-primary-content: oklch(100% 0 0);
+	--color-secondary: oklch(0% 0 0);
+	--color-secondary-content: oklch(100% 0 0);
+	--color-accent: oklch(0% 0 0);
+	--color-accent-content: oklch(100% 0 0);
+	--color-neutral: oklch(20% 0 0);
+	--color-neutral-content: oklch(100% 0 0);
 
-  --color-info: oklch(0% 0 0);
-  --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(0% 0 0);
-  --color-success-content: oklch(100% 0 0);
-  --color-warning: oklch(0% 0 0);
-  --color-warning-content: oklch(100% 0 0);
-  --color-error: oklch(0% 0 0);
-  --color-error-content: oklch(100% 0 0);
+	--color-info: oklch(0% 0 0);
+	--color-info-content: oklch(100% 0 0);
+	--color-success: oklch(0% 0 0);
+	--color-success-content: oklch(100% 0 0);
+	--color-warning: oklch(0% 0 0);
+	--color-warning-content: oklch(100% 0 0);
+	--color-error: oklch(0% 0 0);
+	--color-error-content: oklch(100% 0 0);
 
-  --radius-selector: 0rem;
-  --radius-field: 0.1rem;
-  --radius-box: 0rem;
+	--radius-selector: 0rem;
+	--radius-field: 0.1rem;
+	--radius-box: 0rem;
 
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
 
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
 
-  --sudoku-related: #E7E7E7;
-  --sudoku-selected: #D1D1D1;
+	--sudoku-related: #e7e7e7;
+	--sudoku-selected: #d1d1d1;
 }
 
 @plugin "daisyui/theme" {
-  name: "dark";
-  default: false;
-  prefersdark: true;
-  color-scheme: "dark";
+	name: 'dark';
+	default: false;
+	prefersdark: true;
+	color-scheme: 'dark';
 
-  --color-base-100: oklch(0% 0 0);
-  --color-base-200: oklch(14% 0 0);
-  --color-base-300: oklch(20% 0 0);
-  --color-base-content: oklch(100% 0 0);
+	--color-base-100: oklch(0% 0 0);
+	--color-base-200: oklch(14% 0 0);
+	--color-base-300: oklch(20% 0 0);
+	--color-base-content: oklch(100% 0 0);
 
-  --color-primary: oklch(100% 0 0);
-  --color-primary-content: oklch(0% 0 0);
-  --color-secondary: oklch(100% 0 0);
-  --color-secondary-content: oklch(0% 0 0);
-  --color-accent: oklch(100% 0 0);
-  --color-accent-content: oklch(0% 0 0);
-  --color-neutral: oklch(80% 0 0);
-  --color-neutral-content: oklch(0% 0 0);
+	--color-primary: oklch(100% 0 0);
+	--color-primary-content: oklch(0% 0 0);
+	--color-secondary: oklch(100% 0 0);
+	--color-secondary-content: oklch(0% 0 0);
+	--color-accent: oklch(100% 0 0);
+	--color-accent-content: oklch(0% 0 0);
+	--color-neutral: oklch(80% 0 0);
+	--color-neutral-content: oklch(0% 0 0);
 
-  --color-info: oklch(100% 0 0);
-  --color-info-content: oklch(0% 0 0);
-  --color-success: oklch(100% 0 0);
-  --color-success-content: oklch(0% 0 0);
-  --color-warning: oklch(100% 0 0);
-  --color-warning-content: oklch(0% 0 0);
-  --color-error: oklch(100% 0 0);
-  --color-error-content: oklch(0% 0 0);
+	--color-info: oklch(100% 0 0);
+	--color-info-content: oklch(0% 0 0);
+	--color-success: oklch(100% 0 0);
+	--color-success-content: oklch(0% 0 0);
+	--color-warning: oklch(100% 0 0);
+	--color-warning-content: oklch(0% 0 0);
+	--color-error: oklch(100% 0 0);
+	--color-error-content: oklch(0% 0 0);
 
-  --radius-selector: 0rem;
-  --radius-field: 0.1rem;
-  --radius-box: 0rem;
+	--radius-selector: 0rem;
+	--radius-field: 0.1rem;
+	--radius-box: 0rem;
 
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
 
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
 
-  --sudoku-related: #1A1A1A;
-  --sudoku-selected: #2A2A2A;
+	--sudoku-related: #1a1a1a;
+	--sudoku-selected: #2a2a2a;
 }
 
 /* Sudoku cell animations */
 @keyframes cell-pop {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.5);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+	0% {
+		transform: scale(0.5);
+		opacity: 0;
+	}
+	50% {
+		transform: scale(1.5);
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
 
 @keyframes cell-shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-3px);
-  }
-  40% {
-    transform: translateX(3px);
-  }
-  60% {
-    transform: translateX(-2px);
-  }
-  80% {
-    transform: translateX(2px);
-  }
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	20% {
+		transform: translateX(-3px);
+	}
+	40% {
+		transform: translateX(3px);
+	}
+	60% {
+		transform: translateX(-2px);
+	}
+	80% {
+		transform: translateX(2px);
+	}
 }
 
 .animate-cell-pop {
-  animation: cell-pop 200ms ease-out;
+	animation: cell-pop 200ms ease-out;
 }
 
 .animate-cell-shake {
-  animation: cell-shake 300ms ease-in-out;
+	animation: cell-shake 300ms ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-cell-pop,
-  .animate-cell-shake {
-    animation: none;
-  }
+	.animate-cell-pop,
+	.animate-cell-shake {
+		animation: none;
+	}
 }
