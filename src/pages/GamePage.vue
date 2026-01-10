@@ -193,7 +193,7 @@ function checkCompletion(): void {
 		// Show victory modal after a short delay
 		setTimeout(() => {
 			showVictoryModal.value = true
-		}, 500)
+		}, 300)
 
 		// Hide confetti after animation
 		setTimeout(() => {
