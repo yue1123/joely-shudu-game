@@ -24,9 +24,9 @@ onMounted(() => {
 
 	let frames = 0
 	;(function frame() {
-    frames += 1
-    if (frames % 2 === 0 && frames < totalFrames) {
-      requestAnimationFrame(frame)
+		frames += 1
+		if (frames % 2 === 0 && frames < totalFrames) {
+			requestAnimationFrame(frame)
 			return
 		}
 		var ticks = Math.max(400, 700 * (frames / totalFrames))
@@ -34,19 +34,19 @@ onMounted(() => {
 		const index = Math.floor(randomInRange(0, colors.length))
 
 		confetti({
-      zIndex: 1000,
+			zIndex: 1000,
 			particleCount: 1,
 			startVelocity: 0,
 			ticks: ticks,
 			origin: {
 				x: Math.random(),
-				y: randomInRange(0, 0.2),
+				y: randomInRange(0, 0.2)
 			},
 			colors: [colors[index] || colors[0]],
 			shapes: ['circle', 'square'],
-			gravity: randomInRange(1.5, 2.2),
-			scalar: randomInRange(1, 1.5),
-			drift: randomInRange(0.4, 0.7)
+			gravity: randomInRange(1.2, 1.5),
+			scalar: randomInRange(0.7, 1.3),
+			drift: randomInRange(-0.6, 0.6)
 		})
 
 		if (frames < totalFrames) {
